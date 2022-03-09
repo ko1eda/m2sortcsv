@@ -50,6 +50,8 @@ var wordlist = []string{
 	"denied",
 	"unable",
 	"disallowed",
+	"congratulations",
+	"approved",
 }
 
 var worldListSecondary = []string{
@@ -65,13 +67,11 @@ var worldListSecondary = []string{
 	"checkout",
 	"product",
 	"option",
-	"item",
 	"checkout",
 	"paypal",
 	"braintree",
 	"brain tree",
 	"credit",
-	"card",
 	"gateway",
 	"cart",
 	"customer",
@@ -79,6 +79,10 @@ var worldListSecondary = []string{
 	"password",
 	"email",
 	"subscription",
+	"user",
+	"subscriber",
+	"stripe",
+	"recaptcha",
 }
 
 func main() {
@@ -119,9 +123,18 @@ func createSortedFiles(records [][]string, filePrefix string) {
 		isHit := false
 		for _, word := range wordlist {
 			if strings.Contains(strings.ToLower(firstColumn), word) {
-				hitCache = append(hitCache, line)
 				isHit = true
 				break
+			}
+		}
+		if isHit {
+			for _, word := range worldListSecondary {
+				isHit = false
+				if strings.Contains(strings.ToLower(firstColumn), word) {
+					hitCache = append(hitCache, line)
+					isHit = true
+					break
+				}
 			}
 		}
 		if !isHit {
