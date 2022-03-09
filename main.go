@@ -54,35 +54,34 @@ var wordlist = []string{
 	"approved",
 }
 
-var worldListSecondary = []string{
-	"account",
-	"login",
-	"log in",
-	"register",
-	"signup",
-	"sign up",
-	"newsletter",
-	"news",
-	"payment",
-	"checkout",
-	"product",
-	"option",
-	"checkout",
-	"paypal",
-	"braintree",
-	"brain tree",
-	"credit",
-	"gateway",
-	"cart",
-	"customer",
-	"address",
-	"password",
-	"email",
-	"subscription",
-	"user",
-	"subscriber",
-	"stripe",
-	"recaptcha",
+var worldListSecondary = map[string]string{
+	"account":      "Account",
+	"login":        "Log in",
+	"log in":       "Log in",
+	"register":     "Log in",
+	"signup":       "Log in",
+	"sign up":      "Log in",
+	"newsletter":   "Newsletter",
+	"news":         "Newsletter",
+	"payment":      "Checkout",
+	"checkout":     "Checkout",
+	"product":      "Catalog",
+	"option":       "Catalog",
+	"paypal":       "Checkout",
+	"braintree":    "Checkout",
+	"brain tree":   "Checkout",
+	"credit":       "Checkout",
+	"gateway":      "Checkout",
+	"cart":         "Checkout",
+	"customer":     "Checkout",
+	"address":      "Checkout",
+	"password":     "Account",
+	"email":        "Account",
+	"subscription": "Account",
+	"user":         "Account",
+	"subscriber":   "Account",
+	"stripe":       "Checkout",
+	"recaptcha":    "Log in",
 }
 
 func main() {
@@ -128,10 +127,11 @@ func createSortedFiles(records [][]string, filePrefix string) {
 			}
 		}
 		if isHit {
-			for _, word := range worldListSecondary {
+			for word, associatedWord := range worldListSecondary {
 				isHit = false
+				nl := append([]string{associatedWord}, line...)
 				if strings.Contains(strings.ToLower(firstColumn), word) {
-					hitCache = append(hitCache, line)
+					hitCache = append(hitCache, nl)
 					isHit = true
 					break
 				}
@@ -143,14 +143,14 @@ func createSortedFiles(records [][]string, filePrefix string) {
 
 	}
 
-	hitResultFile, err := os.Create("./results/" + filePrefix + "_hits.csv")
+	hitResultFile, err := os.Create("./hits/" + filePrefix + "_hits.csv")
 	if err != nil {
 		panic(err)
 	}
 
 	defer hitResultFile.Close()
 
-	missResultFile, err := os.Create("./results/" + filePrefix + "_misses.csv")
+	missResultFile, err := os.Create("./misses/" + filePrefix + "_misses.csv")
 	if err != nil {
 		panic(err)
 	}
