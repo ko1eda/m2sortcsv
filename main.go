@@ -56,6 +56,9 @@ var wordlist = []string{
 
 var worldListSecondary = map[string]string{
 	"account":      "Account",
+	"purchase":     "Checkout",
+	"sku":          "Catalog",
+	"wish list":    "Wish List",
 	"login":        "Log in",
 	"log in":       "Log in",
 	"register":     "Log in",
@@ -82,6 +85,40 @@ var worldListSecondary = map[string]string{
 	"subscriber":   "Account",
 	"stripe":       "Checkout",
 	"recaptcha":    "Log in",
+}
+
+var blackList = []string{
+	"index",
+	"indexer",
+	"parent",
+	"child",
+	"image",
+	"schema",
+	"simple product",
+	"configurable product",
+	"entity",
+	"model",
+	"magento",
+	"not exist",
+	"load",
+	"tokens",
+	"template",
+	"block",
+	"widget",
+	"site url",
+	"store url",
+	"website url",
+	"creditmemo",
+	"memo",
+	"exception",
+	"grid",
+	"attribute",
+	"token",
+	"api",
+	"configuration",
+	"cron",
+	"system",
+	"module",
 }
 
 func main() {
@@ -118,8 +155,18 @@ func createSortedFiles(records [][]string, filePrefix string) {
 	missCache := make([][]string, 0, len(records))
 
 	for _, line := range records {
-		firstColumn := line[0]
 		isHit := false
+		isBlackListed := false
+		firstColumn := line[0]
+		for _, word := range blackList {
+			if strings.Contains(strings.ToLower(firstColumn), word) {
+				isBlackListed = true
+				break
+			}
+		}
+		if isBlackListed {
+			continue
+		}
 		for _, word := range wordlist {
 			if strings.Contains(strings.ToLower(firstColumn), word) {
 				isHit = true
