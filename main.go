@@ -2,11 +2,15 @@ package main
 
 import (
 	"encoding/csv"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"strings"
 )
 
+// Should juse json input or something but lazy,
+// Client wanted a list of all error and success messages on their whole sight for every language, and what part of the site they appeared in
+// Each language file was about 14K+ lines long
 var wordlist = []string{
 	"don't",
 	"dont",
@@ -54,7 +58,8 @@ var wordlist = []string{
 	"approved",
 }
 
-var worldListSecondary = map[string]string{
+// this map adds the section to each line in the newly created csv based on the filtered w
+var wordMap = map[string]string{
 	"account":      "Account",
 	"purchase":     "Checkout",
 	"sku":          "Catalog",
@@ -87,6 +92,7 @@ var worldListSecondary = map[string]string{
 	"recaptcha":    "Log in",
 }
 
+// these are words typically associated with system / admin phrases, client only wanted client facing messages
 var blackList = []string{
 	"index",
 	"indexer",
@@ -129,25 +135,35 @@ func main() {
 		panic(err)
 	}
 
+	// go routine to speed up the file processng
+	semaphore := make(chan struct{}, len(fileInfo))
 	for _, file := range fileInfo {
-		fname := file.Name()
+		go func(file fs.FileInfo, semaphore chan struct{}) {
+			fname := file.Name()
 
-		csvFile, err := os.Open("./inputs/" + fname)
+			csvFile, err := os.Open("./inputs/" + fname)
 
-		if err != nil {
-			panic(err)
-		}
+			if err != nil {
+				panic(err)
+			}
 
-		reader := csv.NewReader(csvFile)
-		reader.LazyQuotes = true
+			reader := csv.NewReader(csvFile)
+			reader.LazyQuotes = true
 
-		records, err := reader.ReadAll()
-		if err != nil {
-			panic(err)
-		}
-
-		createSortedFiles(records, fname)
+			records, err := reader.ReadAll()
+			if err != nil {
+				panic(err)
+			}
+			createSortedFiles(records, fname)
+			semaphore <- struct{}{}
+		}(file, semaphore)
 	}
+
+	for i := 0; i < len(fileInfo); i++ {
+		<-semaphore
+	}
+
+	close(semaphore)
 }
 
 func createSortedFiles(records [][]string, filePrefix string) {
@@ -174,7 +190,7 @@ func createSortedFiles(records [][]string, filePrefix string) {
 			}
 		}
 		if isHit {
-			for word, associatedWord := range worldListSecondary {
+			for word, associatedWord := range wordMap {
 				isHit = false
 				nl := append([]string{associatedWord}, line...)
 				if strings.Contains(strings.ToLower(firstColumn), word) {
@@ -187,21 +203,18 @@ func createSortedFiles(records [][]string, filePrefix string) {
 		if !isHit {
 			missCache = append(missCache, line)
 		}
-
 	}
 
 	hitResultFile, err := os.Create("./hits/" + filePrefix + "_hits.csv")
 	if err != nil {
 		panic(err)
 	}
-
 	defer hitResultFile.Close()
 
 	missResultFile, err := os.Create("./misses/" + filePrefix + "_misses.csv")
 	if err != nil {
 		panic(err)
 	}
-
 	defer missResultFile.Close()
 
 	hitWriter := csv.NewWriter(hitResultFile)

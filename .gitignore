@@ -1,1 +1,2 @@
-**/**.csv
+**/hits/*.csv
+**/misses/*.csv
